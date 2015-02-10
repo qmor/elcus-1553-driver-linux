@@ -1,0 +1,3 @@
+CFLAGS_MODULE += -DTMK1553B_NOCONFIGH -DTMK1553B_THREADS
+obj-m := tmk1553b.o
+tmk1553b-objs := tmk1553.o tmklllin.o

@@ -1,0 +1,267 @@
+
+        The tmk1553b driver v4.06 for ELCUS MIL-STD-1553B interface cards 
+allows to create and use software for such cards in Linux operating system 
+(Linux kernel 2.2/2.4/2.6).
+
+        The tmk1553b driver supports up to 8 devices of the following 
+types simultaneously: TMK-400, RTMK-400, MTMK-400, TX1-PC (TE1-PC), TX1-MP, 
+TX1-104 (TE1-104), TX6-PC (TE6-PC), TX6-104 (TE6-104), TE1-PCI, TE1-PCI2, 
+TE6-PCI, TE6-PCI2, TE1-PCI4, TE6-PCI4, TA1-PC, TAM1, TA1-104, TA1-PCI, 
+TA1-PCI4, TA1-PCI-32RT. The driver supports up to 8 independent devices. If 
+some of installed cards contain more than 1 device, then the number of cards 
+will accordingly decrease. In addition, the driver supports up to 23 virtual 
+RTs located on a single or several cards able to work in Multiaddress RT mode 
+(TE6-PCI, TE6-PCI2, TA1-PCI-32RT).
+
+        TMK-400, RTMK-400, MTMK-400 cards can work in BC (Bus Controller)
+or RT (Remote Terminal) modes.
+        TX1/TE1 series cards can work in BC, RT or MT (Monitor) modes.
+        TX6/TE6 series cards can work in BC, RT or MT modes. Besides, TX6/TE6 
+cards can be configured to work as a Multiaddress RT (4 RT devices in a 
+single physical device).
+        TA1 series card can work in BC, RT or MT modes. This driver release 
+does not support combined RT/MT mode and Word Monitor mode. TA1-PCI-23RT card 
+can work in Multiaddress RT mode only.
+
+        Driver set contains precompiled drivers for kernels 2.2.16, 2.4.7,
+2.4.32, 2.6.16 (64 bits), 2.6.21. You may need to compile the driver yourself 
+for using the driver with other kernels. Kernel sources (or kernel headers in 
+newer kernels) should be installed to enable you to compile the driver. 
+If you are planning to use threads in your program, please use make24t/make26t/
+make26ut/make26uut commands (with 't' suffix) to compile the driver. The 
+driver with threads support enabled was tested in kernel 2.6 only. We believe 
+it should work in kernel 2.4 in the case if threads in kernel 2.4 are built in 
+the same way as in kernel 2.6 but it has not been tested. If you use threads 
+please take in attention that the driver does not have an active thread 
+tracking mechanism. It means that if you want to work with the driver from 
+different threads of the same process you may need to provide some kind of 
+synchronization for driver calls because most driver functions are bound to 
+current device/base/subaddress defined in previous calls. The only function 
+which does not require synchronization is tmkwaitevents function. You do not 
+need any synchronization on process level but you will not be able to use same 
+device in different processes.
+
+        There are two methods to compile the driver. The first method is more 
+simple and should be tried at first and if the driver cannot be compiled or 
+started then try the second method.
+
+1. In the /source/tmk1553b folder run appropriate command: make22u for 
+   kernels 2.2; make24u or make24ut for kernels 2.4; make26uu or make26uut for 
+   kernels 2.6. 
+
+1. In the /source/tmk1553b folder run appropriate command: make22 for 
+   kernels 2.2; make24 or make24t for kernels 2.4; make26 or make26t for 
+   kernels 2.6. 
+   Linux kernel sources should be placed in the /usr/src/linux folder for 
+   successful driver compilation. If, by any reason, Linux kernel sources 
+   are placed in other folder (for example, /usr/src/linux-2.4) you need to 
+   create /usr/src/linux yourself by running command like this:
+   link /usr/src/linux-2.4 /usr/src/linux
+   This command is placed in linkkern24 file.
+   You may need to run following commands in kernel 2.6 to be able to compile 
+   the driver:
+   cd /usr/src/linux
+   make mrproper
+   make cloneconfig
+   make modules_prepare
+
+        The driver is built as a kernel module. The driver can be started by 
+running command:
+
+insmod tmk1553b.ko <params>
+
+and the driver can be stopped in Linux kernel 2.2/2.4 by running command:
+
+rmmod tmk1553b.ko
+
+or in Linux kernel 2.6 by running command:
+
+rmmod tmk1553b
+
+        Before this, it is necessary to create appropriate device file in 
+/dev folder by running command:
+
+mknod /dev/tmk1553b c N 0
+
+where N - major number, assigned to the driver. You can either choose it 
+yourself from free numbers and then define it during mknod and insmod calls, 
+or allow the driver to obtain it dynamically and then find the number in the 
+/proc/devices file.
+
+This command is placed in mkdev file (assuming N is 254).
+
+        In some kernels 2.6 it is possible to create device file automatically 
+by starting the driver with special misc=1 parameter. In such a case the 
+driver will register in the 'misc' device subsystem and appropriate device 
+file /dev/tmk1553b will be created by the 'misc' driver. In such a case the 
+driver will use major number 10 associated with the 'misc' driver and minor 
+number will be assigned dynamically by the 'misc' driver. You can find this 
+number in the /proc/misc file.
+
+        In the case of any errors at driver start some diagnostic messages can 
+be written at the end of the /var/log/messages file.
+
+        You can use expressions below as parameters for the driver:
+misc=M - use the 'misc' device to register the driver, where N can be 0 (off) 
+        or 1 (on);
+nrt=N - define maximum number of virtual RTs on each Multiaddress RT device;
+major=N - define major number N for the driver. If the number is not defined
+        the driver tries to obtain it dynamically. If nobody else has tried 
+        to obtain major number dynamically, its value usually is 254;
+name="mydevice" - define device name the driver registers;
+        Default: name="tmk1553b";
+a0=N - define first I/O registers address of ISA device 0. For most devices 
+        except TMK-400 there is the first address only. Address is defined in 
+        C/C++ format, i.e. hexadecimal values should have prefix 0x;
+b0=N - define second I/O registers address of ISA device 0 (for TMK-400 only).
+        Address is defined in C/C++ format, i.e. hexadecimal values should 
+        have prefix 0x;
+i0=N - define irq number of ISA device 0;
+t0="type" - define type of device 0. "type" values can be "TMK400", "RTMK400",
+        "TMKMPC", "TMKX", "TMKXI", "TA", "TAI" and they are the same as device 
+        types in the tmk.cfg configuration file in DOS;
+l0="load" - define load type for TMKX/TMKXI devices. "load" values can be 
+        "TX1", "TX6", "MR6". Default: "TX1";
+d0=N - define Elcus MIL-STD-1553B PCI card number in computer, starting 
+        from 1. The driver use this number to distinguish several PCI cards. 
+        Cards numbers depend on cards order in PCI slots. In the case of 
+        single Elcus MIL-STD-1553B card only its number is 1;
+e0=N - define device number on PCI cards with several devices(TE1-PCI2, 
+       TE1-CPCI2, etc.), starting from 1.
+
+a1=N b1=N i1=N d1=N e1=N t1="type" l1="load"
+a2=N b2=N i2=N d2=N e2=N t2="type" l2="load"
+a3=N b3=N i3=N d3=N e3=N t3="type" l3="load"
+a4=N b4=N i4=N d4=N e4=N t4="type" l4="load"
+a5=N b5=N i5=N d5=N e5=N t5="type" l5="load"
+a6=N b6=N i6=N d6=N e6=N t6="type" l6="load"
+a7=N b7=N i7=N d7=N e7=N t7="type" l7="load" - same parameters for devices
+        from 1 to 7.
+
+        For ISA devices you need to define parameters a, [b], i, t, [l], for
+PCI devices you need to define parameters d, [e], t. Parameters b, e, l can
+be defined if necessary for appropriate device types.
+
+Examples:
+1. Start the driver for single TX1-PC card, address 150h, interrupt 11,
+major number is assigned dynamically, but it is known that the given system 
+will provide major number 254:
+
+mknod /dev/tmk1553b c 254 0
+insmod ./tmk1553b.ko a0=0x150 i0=11 t0="TMKX"
+
+2. Start the driver for two cards: TX6-PC, address 150h, interrupt 10 and
+TMK-400, addresses 120h, 130h, interrupt 11, major number defined as 123:
+
+mknod /dev/tmk1553b c 123 0
+insmod ./tmk1553b.ko major=123 a0=0x150 i0=10 t0="TMKX" l0="TX6" a1=0x120 b1=0x130 i1=11 t1="TMK400"
+
+3. Start the driver for three cards: TX6-PC, address 150h, interrupt 10 and
+two TE1-PCI cards:
+
+mknod /dev/tmk1553b c 254 0
+insmod ./tmk1553b.ko a0=0x150 i0=10 t0="TMKX" l0="TX6" d1=1 t1="TMKXI" d2=2 t2="TMKXI"
+
+4. Start the driver for single TE1-PCI2 card with two devices onboard:
+
+mknod /dev/tmk1553b c 254 0
+insmod ./tmk1553b.ko d0=1 e0=1 t0="TMKXI" d1=1 e1=2 t1="TMKXI"
+
+5. Start the driver for single TE6-PCI2 card with two devices onboard and
+configure one device as a standard BC/RT/MT and second device as a 
+Multiaddress RT:
+
+mknod /dev/tmk1553b c 254 0
+insmod ./tmk1553b.ko d0=1 e0=1 t0="TMKXI" d1=1 e1=2 t1="TMKXI" l1="MR6"
+
+6. Start the driver for two cards: TX6-PC, address 150h, interrupt 10 as a 
+Multiaddress RT and TE1-PCI:
+
+mknod /dev/tmk1553b c 254 0
+insmod ./tmk1553b.ko a0=0x150 i0=10 t0="TMKX" l0="MR6" d1=1 t1="TMKXI"
+
+7. Start the driver for single TA1-PCI card:
+mknod /dev/tmk1553b c 254 0
+insmod ./tmk1553b.ko d0=1 t0="TAI"
+
+8. Start the driver for single TA1-PCI4 card with 4 devices onboard, 
+register in the 'misc' device subsystem:
+
+insmod ./tmk1553b.ko d0=1 e0=1 t0="TAI" d1=1 e1=2 t1="TAI" d2=1 e2=3 t2="TAI" d3=1 e3=4 t3="TAI" misc=1
+
+9. Start the driver for two Multiaddress RT TA1-PCI-32RT cards, use 8 virtual 
+RTs on each card, register in the 'misc' device subsystem:
+
+insmod ./tmk1553b.ko d0=1 t0="MRTAI" d1=1 t1="MRTAI" nrt=8 misc=1
+
+        After the driver started, you can work with the driver according
+to Driver Programmer's Guide (tmkguide_e.doc) and Driver Reference Guide 
+(tmkref_e.doc) which can be downloaded separately as a single archive at 
+http://www.elcus.ru/files/mil-std/drv/1553docs_e.zip
+
+        Some programs such as 'simpltst', 'randbcrt' and 'mt1553be' are 
+placed in 'bin32' and 'bin64' folders.
+
+        'simpltst' - simple test utility for the driver and one device. It 
+performs device memory test and device interrupt generation test.
+Usage:
+'simpltst'   - performs test of the card 0,
+'simpltst 0' - performs test of the card 0,
+'simpltst 1' - performs test of the card 1,
+etc.
+
+        'randbcrt' - test utility for the driver and two devices (BC and RT) 
+or three devices (BC, RT and MT) connected via data bus.
+Usage:
+'randbcrt [D D [D]] [a] [b] [c+-] [g+-] [i+-] [f+-] [eD] [mD-D]'
+Default: 
+'randbcrt 0 1 a b c+ g+ i+ f+ e0' - device 0 BC, device 1 RT, buses A and B,
+mode commands enabled (c+), broadcast messages enabled (g+), instrumentation
+bit enabled (i+), RT flag mode enabled (f+), errors - unlimited (e0).
+
+        'mt1553be' - message monitor program saves message log to the file 
+and can display some defined data on the screen.
+Usage:
+'mt1553be parameters'
+Parameters (with default values):
+? - this help;
+d<DeviceNumber(dec)> - defines device number (starting from 0) (no);
+n<FileName> - defines output filename (nmonitor.dat);
+l<BufferLength(dec)> - defines messages buffer length (l%ld);
+f<WriteWord(hex)> - switches on the specified data word prewrite mode for
+     all monitor memory (off);
+th<0-6> - switches on hardware message timer (off);
+b<+/-> - switches on/off broadcast messages monitoring (b+);
+ar<RtAddressRange(dec)> - defines RT addresses range for data registration,
+     for example: ar2,5-10,17,28-30 (ar0-30);
+o<DataAddressRange(hex)> - defines displayed data addresses range in the bus
+     when monitoring, for example: o0E21,5223-5226 (off);
+m<b/r/m> - defines modes of buffering(b), registering(r),
+     monitoring only(m) (mr).
+Examples:
+'mt1553be d0 ndata.sav l2000 fFFFF ar0-9,20-29'
+'mt1553be d1 th'
+
+        Sources of the driver and 'simpltst', 'randbcrt' programs can be found 
+in appropriate subfilders of the 'source' folder.
+
+        In the version v4.00 and above the driver supports TA1-PCI-32RT card 
+in Multiaddress RT (up to 31 RT) mode.
+
+        While the numbers for real devices are assigned manually, the numbers 
+for virtual RTs located on Multiaddress RT devices are assigned by the driver 
+automatically. For virtual RTs the driver assigns numbers 8 and above. The 
+'simpltst' program allows to determine the starting number and the quantity of 
+virtual RTs located on real Multiaddres RT device if started with parameter 
+equal to Multiaddress RT device number.
+
+        Current driver version allows to use up to 23 virtual RTs only because 
+of 'tmkwaitevents' function syntax using 32-bit signed parameter as a device 
+numbers mask. As far as 8 bits are reserved for real devices, virtual devices 
+can use 23 bits only. If it is necessary to use several TA1-PCI-32RT cards 
+with total quantity of RTs less than 24, then it is possible to limit quantity 
+of RTs on each single card by specifying 'nrt' parameter at driver start. It 
+is planned to extend the driver API in some future driver versions to allow it 
+to handle more virtual RT devices.
+
+(á) Elcus Electronic Company JSC, 2002, 2011.
