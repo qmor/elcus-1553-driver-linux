@@ -120,6 +120,9 @@ typedef int PEPROCESS;
 
 #include "tmk1553b.h"          /* local definitions */
 
+#if !defined(IRQF_DISABLED)
+#  define IRQF_DISABLED 0x00
+#endif
 int fTMKInit = 0;
 
 UINT tmkNumber;

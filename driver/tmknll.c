@@ -488,7 +488,11 @@ unsigned long pciReadConfigDword(__TPciBusDevFun *pciBusDevFun, unsigned wReg)
 #define __64BIT__
 #endif
 #include <asm/io.h>
-
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,1,0)
+#include <linux/spinlock_types.h>
+#include <linux/spinlock.h>
+#endif
 #endif //def LINUX
 
 #ifdef QNX6

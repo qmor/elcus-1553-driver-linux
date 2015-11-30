@@ -1,5 +1,7 @@
 /sbin/rmmod tmk1553b
 rm /dev/tmk1553b
+#/bin/mknod /dev/tmk1553b c 196 0
 /sbin/insmod tmk1553b.ko d0=1 t0="TAI" misc=1 
+#major=196
 chmod o+rwx /dev/tmk1553b
 
