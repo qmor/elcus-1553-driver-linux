@@ -1,3 +1,4 @@
+rm *.o *.ko
 rm -f Makefile
 ln Makefile3 Makefile
 make -C /lib/modules/`uname -r`/build SUBDIRS=$PWD modules

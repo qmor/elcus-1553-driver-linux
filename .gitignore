@@ -1,0 +1,9 @@
+.metadata
+RemoteSystemsTempFiles
+*.cmd
+*.o
+*.ko
+*.mod
+*.symvers
+*.order
+*.mod.c

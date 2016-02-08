@@ -20,3 +20,8 @@ chmod +x make3
 d0=1 t0="TAI" misc=1 
 
 , тем самым предназначен для работы с платами типа TA, для настройки других плат смотрите оригинальные readme
+
+modify /etc/sudoers
+
+
+ALL    ALL = (root) NOPASSWD: /absolute/path/to/your/install_and_load

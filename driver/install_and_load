@@ -1,0 +1,5 @@
+echo Starting
+/sbin/rmmod tmk1553b
+cp tmk1553b.ko /opt/elcus-1553-driver
+/sbin/modprobe tmk1553b
+echo Finished
