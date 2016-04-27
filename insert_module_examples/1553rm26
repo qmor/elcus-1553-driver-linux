@@ -1,0 +1,3 @@
+echo Unloading the Tmk1553B driver module
+
+rmmod tmk1553b

@@ -7,11 +7,11 @@ allows to create and use software for such cards in Linux operating system
 types simultaneously: TMK-400, RTMK-400, MTMK-400, TX1-PC (TE1-PC), TX1-MP, 
 TX1-104 (TE1-104), TX6-PC (TE6-PC), TX6-104 (TE6-104), TE1-PCI, TE1-PCI2, 
 TE6-PCI, TE6-PCI2, TE1-PCI4, TE6-PCI4, TA1-PC, TAM1, TA1-104, TA1-PCI, 
-TA1-PCI4, TA1-PCI-32RT. The driver supports up to 8 independent devices. If 
-some of installed cards contain more than 1 device, then the number of cards 
-will accordingly decrease. In addition, the driver supports up to 23 virtual 
-RTs located on a single or several cards able to work in Multiaddress RT mode 
-(TE6-PCI, TE6-PCI2, TA1-PCI-32RT).
+TA1-PCI4, TA1-PCI-32RT, TA1-PE2, TA1-PE4. The driver supports up to 8 
+independent devices. If some of installed cards contain more than 1 device,
+then the number of cards will accordingly decrease. In addition, the driver 
+supports up to 23 virtual RTs located on a single or several cards able to 
+work in Multiaddress RT mode (TE6-PCI, TE6-PCI2, TA1-PCI-32RT).
 
         TMK-400, RTMK-400, MTMK-400 cards can work in BC (Bus Controller)
 or RT (Remote Terminal) modes.

@@ -85,7 +85,7 @@
 //#ifdef CONFIG_DEVFS_FS
 //#define MY_CONFIG_DEVFS_FS
 //#endif
-//#define MY_DBG
+
 #ifdef MY_DBG
 #define MY_KERN_DEBUG KERN_EMERG
 #define MY_KERN_INFO KERN_EMERG
@@ -120,9 +120,6 @@ typedef int PEPROCESS;
 
 #include "tmk1553b.h"          /* local definitions */
 
-#if !defined(IRQF_DISABLED)
-#  define IRQF_DISABLED 0x00
-#endif
 int fTMKInit = 0;
 
 UINT tmkNumber;
@@ -889,6 +886,7 @@ PUSHORT lpwIn, lpwOut, lpwBuf;
 
 
 #ifdef CONFIG_PCI
+#define PLX_MAX_DEVICE_CNT 2
 #define ID_TX1PCI 0x0001E1C5
 #define ID_TX6PCI 0x0002E1C5
 #define ID_TX1PCI2 0x0003E1C5
@@ -896,6 +894,10 @@ PUSHORT lpwIn, lpwOut, lpwBuf;
 #define ID_TA1PCI 0x0005E1C5
 #define ID_TA1PCI4 0x0006E1C5
 #define ID_TA1PCI32RT 0x0007E1C5
+#define ID_TA1PE2 0x0008E1C5
+#define ID_TA1PE4 0x0009E1C5
+#define ID_TA1PE32RT 0x000AE1C5
+#define CFG_COMMAND      0x04
 #define CFG_SUBSYSTEM_ID 0x2C
 #define CFG_IRQ          0x3C
 #define CFG_ADDR1        0x14
@@ -1354,9 +1356,6 @@ int tmk1553b_ioctl(struct inode *inode, struct file *filp,
      * extract the type and number bitfields, and don't decode
      * wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok()
      */
-#ifdef MY_DBG
-printk("ioctl() %u %ul\n",cmd,arg);
-#endif
     if (_IOC_TYPE(cmd) != TMK_IOC_MAGIC) return -ENOTTY;
     dwService = _IOC_NR(cmd);
     if (dwService > MAX_TMK_API /*||
@@ -1772,12 +1771,15 @@ char *apszTmkLoadName[MAX_LOAD_TYPE+1] = {"TX1",
 int RegInit(int hTMK, UINT tmkPorts1, UINT tmkPorts2, UINT tmkIrq1, int tmkDev, int tmkDevExt, char *pszType, char *pszLoad)
 {
   int tmkType, tmkLoad = 0;
+  int nPciDeviceID;
   struct pci_dev *pciDev;
   u32 pciSubSystemID, tmkSystemID = 0;
+  u16 aPciDeviceID[PLX_MAX_DEVICE_CNT] = {0x9030, 0x9056};
   UINT tmkHiddenPorts = 0;
   UINT tmkLocalReadInt = 0;
   int fDev, nFoundDev;
   int found;
+  int subdev1;
 
   if (pszType == 0) 
     return 0;
@@ -1832,58 +1834,80 @@ int RegInit(int hTMK, UINT tmkPorts1, UINT tmkPorts2, UINT tmkIrq1, int tmkDev, 
     fDev = 1;
     pciDev = NULL;
     nFoundDev = 0;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-    while ((pciDev = pci_get_device(0x10B5, 0x9030, pciDev)) != NULL)
-#else
-    while ((pciDev = pci_find_device(0x10B5, 0x9030, pciDev)) != NULL)
-#endif
+    for(nPciDeviceID = 0; nPciDeviceID < PLX_MAX_DEVICE_CNT; nPciDeviceID++)
     {
-      pci_read_config_dword(pciDev, CFG_SUBSYSTEM_ID, &pciSubSystemID);
-      if (pciSubSystemID != ID_TX1PCI &&
-          pciSubSystemID != ID_TX1PCI2
-#ifdef LOADTX6
-          && pciSubSystemID != ID_TX6PCI
-          && pciSubSystemID != ID_TX6PCI2
-#endif //def LOADTX6
-          && pciSubSystemID != ID_TA1PCI
-          && pciSubSystemID != ID_TA1PCI4
-          && pciSubSystemID != ID_TA1PCI32RT
-         )
-        continue;
-      tmkSystemID = pciSubSystemID;
-      ++nFoundDev;
-//      nFoundIrq = pciReadConfigByte(wBusDevFun, CFG_IRQ);
-      if ((fDev && tmkDev == nFoundDev)) // || (fIrq && nIrq == nFoundIrq))
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
+      while ((pciDev = pci_get_device(0x10B5, aPciDeviceID[nPciDeviceID], pciDev)) != NULL)
+#else
+      while ((pciDev = pci_find_device(0x10B5, aPciDeviceID[nPciDeviceID], pciDev)) != NULL)
+#endif
       {
-        if (pci_enable_device(pciDev))
+        pci_read_config_dword(pciDev, CFG_SUBSYSTEM_ID, &pciSubSystemID);
+        if (pciSubSystemID != ID_TX1PCI &&
+            pciSubSystemID != ID_TX1PCI2
+#ifdef LOADTX6
+            && pciSubSystemID != ID_TX6PCI
+            && pciSubSystemID != ID_TX6PCI2
+#endif //def LOADTX6
+            && pciSubSystemID != ID_TA1PCI
+            && pciSubSystemID != ID_TA1PCI4
+            && pciSubSystemID != ID_TA1PCI32RT
+            && pciSubSystemID != ID_TA1PE2
+            && pciSubSystemID != ID_TA1PE4
+            && pciSubSystemID != ID_TA1PE32RT
+           )
+          continue;
+        tmkSystemID = pciSubSystemID;
+        ++nFoundDev;
+//        nFoundIrq = pciReadConfigByte(wBusDevFun, CFG_IRQ);
+        if ((fDev && tmkDev == nFoundDev)) // || (fIrq && nIrq == nFoundIrq))
         {
-          printk(MY_KERN_WARNING "tmk1553b: Can not enable specified PCI device!\n");
+          if (pci_enable_device(pciDev))
+          {
+            printk(MY_KERN_WARNING "tmk1553b: Can not enable specified PCI device!\n");
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-          pci_dev_put(pciDev);
+            pci_dev_put(pciDev);
 #endif
-          return -1;
-        }
-        pci_read_config_dword(pciDev, CFG_ADDR1+(tmkDevExt<<2), &tmkPorts1);
-        tmkPorts1 &= 0x0000FFFE;
-        if (tmkPorts1 == 0)
-        {
-          printk(MY_KERN_WARNING "tmk1553b: Can not find specified PCI subdevice!\n");
+            return -1;
+          }
+          pci_read_config_dword(pciDev, CFG_ADDR1, &tmkHiddenPorts);
+          tmkHiddenPorts &= 0x0000FFFE;
+          subdev1 = tmkDevExt;
+          if(pciSubSystemID == ID_TA1PE4)
+            subdev1 = ((tmkDevExt - 1) >> 1) + 1;
+          pci_read_config_dword(pciDev, CFG_ADDR1+(subdev1<<2), &tmkPorts1);
+          tmkPorts1 &= 0x0000FFFE;
+          
+          if(pciSubSystemID == ID_TA1PE4 && tmkPorts1 != 0)
+            tmkPorts1 += 32 * ((tmkDevExt - 1) & 0x1);
+          if(pciSubSystemID == ID_TA1PE4 && tmkDevExt == 2 && tmkPorts1 != 0)
+            if((inw(tmkHiddenPorts) & 0xFF) != 0xC1)
+              tmkPorts1 = 0;
+
+          if (tmkPorts1 == 0)
+          {
+            printk(MY_KERN_WARNING "tmk1553b: Can not find specified PCI subdevice!\n");
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-          pci_dev_put(pciDev);
+            pci_dev_put(pciDev);
 #endif
-          return -1;
+            return -1;
+          }
+//          pci_read_config_byte(pciDev, CFG_IRQ, &tmkIrq1);
+//          tmkIrq1 &= 0x000000FF;
+          tmkIrq1 = pciDev->irq;
+//          pciWriteConfigWord(wBusDevFun, CFG_ADDR2, wPort | 1);
+          if (tmkSystemID == ID_TX1PCI2 || tmkSystemID == ID_TX6PCI2)
+            tmkLocalReadInt = 1;
+          else
+            tmkLocalReadInt = 0;
+          if (tmkSystemID == ID_TA1PE2 || tmkSystemID == ID_TA1PE4 || tmkSystemID == ID_TA1PE32RT)
+	  {
+            outw(inw(tmkHiddenPorts + 0x68) | 0x0800, tmkHiddenPorts + 0x68); //Enable INTi#
+            outw(inw(tmkHiddenPorts + 0x6A) & 0xFFFE, tmkHiddenPorts + 0x6A); //Disable INTo#
+	  }
+	  nPciDeviceID = PLX_MAX_DEVICE_CNT;
+          break;
         }
-        pci_read_config_dword(pciDev, CFG_ADDR1, &tmkHiddenPorts);
-        tmkHiddenPorts &= 0x0000FFFE;
-//        pci_read_config_byte(pciDev, CFG_IRQ, &tmkIrq1);
-//        tmkIrq1 &= 0x000000FF;
-        tmkIrq1 = pciDev->irq;
-//        pciWriteConfigWord(wBusDevFun, CFG_ADDR2, wPort | 1);
-        if (tmkSystemID == ID_TX1PCI2 || tmkSystemID == ID_TX6PCI2)
-          tmkLocalReadInt = 1;
-        else
-          tmkLocalReadInt = 0;
-        break;
       }
     }
     if (pciDev == NULL)

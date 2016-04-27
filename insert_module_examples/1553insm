@@ -1,0 +1,11 @@
+echo Loading the Tmk1553b driver module for six devices:
+echo 0 TA1-PCI: dev 1      - Standard BC/RT/MT device
+echo 1 TE6-PCI2: dev 2.1   - in the Standard BC/RT/MT mode
+echo 2 TE6-PCI2: dev 2.2   - in the Standard BC/RT/MT mode
+echo 3 TA1-PCI-32RT: dev 3 - Multiple RT device
+echo 4 TE6-PCI2: dev 4.1   - in the Multiple RT mode
+echo 5 TE6-PCI2: dev 4.2   - in the Standard BC/RT/MT mode
+echo Allocating 3 virtual RT on each Multiple RT device
+echo Registering as misc device
+
+insmod ./tmk1553b.ko d0=1 t0="TAI" d1=2 e1=1 t1="TMKXI" d2=2 e2=2 t2="TMKXI" d3=3 t3="MRTAI" d4=4 e4=1 t4="TMKXI" l4="MR6" d5=4 e5=2 t5="TMKXI" misc=1 nrt=3

@@ -1,0 +1,6 @@
+echo Loading the Tmk1553b driver module for three cards:
+echo 0 TMK-400: 140h,150h, irq11
+echo 1 TE1-PCI: dev 1
+echo 2 TE1-PCI: dev 2 
+
+insmod ./tmk1553b.ko a0=0x140 b0=0x150 i0=11 t0="TMK400" d1=1 t1="TMKXI" d2=2 t2="TMKXI"
