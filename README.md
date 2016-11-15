@@ -25,3 +25,8 @@ modify /etc/sudoers
 
 
 ALL    ALL = (root) NOPASSWD: /absolute/path/to/your/install_and_load
+
+
+Загрузка драйвера для TA1-PE2
+
+sbin/insmod /opt/tmk1553b.ko d0=1 e0=1 t0="TAI" d1=1 e1=2 t1="TAI" misc=1 && chmod o+rwx /dev/tmk1553b
