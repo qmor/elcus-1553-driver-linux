@@ -1,0 +1,9 @@
+#define TMK1553BUSB_DEBUG
+//#define COMMENT
+#define MY_OWNER
+#define MAX_DEVICES        8
+//#define ASYNCHRONOUS_IO
+//#define SPIN_LOCK_BLOCKING
+//#define SPIN_LOCK_IRQ_BLOCKING
+//#define PARSER_DEBUG
+//#define TMK1553BUSB_MT_DEBUG

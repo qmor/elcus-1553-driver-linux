@@ -1,0 +1,4 @@
+rm -f Makefile
+ln Makefile26 Makefile
+make -C /lib/modules/`uname -r`/build SUBDIRS=$PWD modules
+rm -v Makefile .*.cmd *.o *.mod.c Module.symvers

@@ -1,0 +1,8 @@
+mknod /dev/tmk1553busb0 c 189 18
+#mknod /dev/tmk1553busb1 c 189 14
+#mknod /dev/tmk1553busb2 c 189 15
+#mknod /dev/tmk1553busb3 c 189 16
+#mknod /dev/tmk1553busb4 c 189 17
+#mknod /dev/tmk1553busb5 c 189 18
+#mknod /dev/tmk1553busb6 c 189 19
+#mknod /dev/tmk1553busb7 c 189 20

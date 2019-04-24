@@ -1,0 +1,3 @@
+CFLAGS_MODULE += -DTMK1553B_NOCONFIGH
+obj-m := tmk1553busb.o
+tmk1553busb-objs := tmk1553usb.o tmklllin.o tmknllio.o
