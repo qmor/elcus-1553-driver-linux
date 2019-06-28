@@ -42,7 +42,6 @@
 
 //#include <asm/system.h>     /* cli(), *_flags */
 
-#include <asm/uaccess.h>
 #include <linux/ioport.h>
 #include <linux/wait.h>
 #include <linux/sched.h>
@@ -76,6 +75,20 @@
 #endif
 #ifndef SET_MODULE_OWNER
 #define SET_MODULE_OWNER(some_struct) do { } while (0)
+#endif
+#ifndef IRQF_DISABLED
+#define IRQF_DISABLED 0
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,11,0)
+#include <linux/sched/signal.h>
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,12,0)
+#include <linux/uaccess.h>
+#else
+#include <asm/uaccess.h>
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+#define wait_queue_t wait_queue_entry_t
 #endif
 
 //#define DBG 1
@@ -119,10 +132,6 @@ typedef int PEPROCESS;
 #endif
 
 #include "tmk1553b.h"          /* local definitions */
-
-#if !defined(IRQF_DISABLED)
-#  define IRQF_DISABLED 0x00
-#endif
 
 int fTMKInit = 0;
 
@@ -1380,7 +1389,12 @@ int tmk1553b_ioctl(struct inode *inode, struct file *filp,
   
       if (_IOC_DIR(cmd) & _IOC_WRITE)
       {
-        if (_IOC_SIZE(cmd) == sizeof(u32[2]))
+        if (_IOC_SIZE(cmd) == sizeof(u32))
+        {
+          __get_user(*((u32*)awIn), (u32*)arg);
+          ptr = (PUSHORT)((unsigned long)(*((u32*)awIn+1))); // not needed for bcgetansw
+        }
+        else if (_IOC_SIZE(cmd) == sizeof(u32[2]))
         {
           __get_user(*((u32*)awIn), (u32*)arg);
           __get_user(*((u32*)awIn+1), (u32*)arg+1);
@@ -1905,11 +1919,11 @@ int RegInit(int hTMK, UINT tmkPorts1, UINT tmkPorts2, UINT tmkIrq1, int tmkDev, 
           else
             tmkLocalReadInt = 0;
           if (tmkSystemID == ID_TA1PE2 || tmkSystemID == ID_TA1PE4 || tmkSystemID == ID_TA1PE32RT)
-	  {
+          {
             outw(inw(tmkHiddenPorts + 0x68) | 0x0800, tmkHiddenPorts + 0x68); //Enable INTi#
             outw(inw(tmkHiddenPorts + 0x6A) & 0xFFFE, tmkHiddenPorts + 0x6A); //Disable INTo#
-	  }
-	  nPciDeviceID = PLX_MAX_DEVICE_CNT;
+          }
+          nPciDeviceID = PLX_MAX_DEVICE_CNT;
           break;
         }
       }
