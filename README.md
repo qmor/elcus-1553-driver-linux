@@ -34,8 +34,10 @@ ALL    ALL = (root) NOPASSWD: /absolute/path/to/your/install_and_load
 
 Для простоты можно записать конфигурацию в файл /etc/modprobe.d/tmk1553b.conf
 
-/etc/modprobe.d# cat tmk1553.conf
-alias pci:v000010b5d00009030sv*sd*bc*sc*i* tmk1553b
-options tmk1553b d0=1 t0="TAI" d1=1 t1="TAI" misc=1
-install tmk1553b /sbin/insmod /opt/tmk1553b.ko d0=1 e0=1 t0="TAI" d1=1 e1=2 t1="TAI" d2=1 e2=3 t2="TAI" d3=1 e3=4 t3="TAI" d4=2 e4=1 t4="TAI" d5=2 e5=2 t5="TAI" d6=2 e6=3 t6="TAI" d7=2 e7=4 t7="TAI"   misc=1 && chmod o+rwx /dev/tmk1553b
+
+  alias pci:v000010b5d00009030sv*sd*bc*sc*i* tmk1553b
+  
+  options tmk1553b d0=1 t0="TAI" d1=1 t1="TAI" misc=1
+  
+  install tmk1553b /sbin/insmod /opt/tmk1553b.ko d0=1 e0=1 t0="TAI" d1=1 e1=2 t1="TAI" d2=1 e2=3 t2="TAI" d3=1 e3=4 t3="TAI" d4=2 e4=1 t4="TAI" d5=2 e5=2 t5="TAI" d6=2 e6=3 t6="TAI" d7=2 e7=4 t7="TAI"   misc=1 && chmod o+rwx /dev/tmk1553b
 
