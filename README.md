@@ -41,3 +41,5 @@ ALL    ALL = (root) NOPASSWD: /absolute/path/to/your/install_and_load
   
   install tmk1553b /sbin/insmod /opt/tmk1553b.ko d0=1 e0=1 t0="TAI" d1=1 e1=2 t1="TAI" d2=1 e2=3 t2="TAI" d3=1 e3=4 t3="TAI" d4=2 e4=1 t4="TAI" d5=2 e5=2 t5="TAI" d6=2 e6=3 t6="TAI" d7=2 e7=4 t7="TAI"   misc=1 && chmod o+rwx /dev/tmk1553b
 
+Для перевода файлов с кракoзябрами вместо русского языка, можно использовать https://github.com/nijel/enca  Пример
+enca -L ru readme -x UTF-8
